@@ -15,7 +15,7 @@
 | CPU model | AMD Ryzen 7 7445HS w/ Radeon 740M Graphics |
 | Number of cores / threads | 6 cores / 12 threads |
 | Base / Boost clock speed (GHz) | ~4.0 GHz base / up to ~4.7 GHz boost |
-| SIMD ISA - SSE, SSE2, SSE4.1, SSE4.2, AVX, AVX2, AVX-512, FMA |
+| SIMD ISA | SSE, SSE2, SSE4.1, SSE4.2, AVX, AVX2, AVX-512, FMA |
 | SIMD width (bits / floats per vector) | 256 bits (8 FP32 floats/vector)|
 | MAC units per core | 2 FMA units/core |
 | L1 cache size (per core) | 32 KB L1d + 32 KB L1i |
@@ -24,9 +24,11 @@
 | Peak theoretical throughput (GFLOP/s) | ~902 GFLOP/s (FP32 AVX2 FMA peak) |
 
 **How did you calculate peak throughput?**
+
 For FP32 matrix multiplication:
 
 AVX2 vector width = 256 bits
+
 FP32 float = 32 bits
 
 So vector lanes:
@@ -37,11 +39,14 @@ FMA performs multiply + add together:
 
 1 FMA=2 FLOPs per element
 
-Your CPU likely has:
+The CPU has:
 
 6 cores
+
 ~4.7 GHz boost
+
 2 FMA units/core
+
 8 FP32 elements/vector
 
 Therefore:
@@ -51,12 +56,17 @@ Therefore:
 Explanation:
 
 6 → cores
+
 4.7 → GHz
+
 8 → floats/vector
+
 first 2 → multiply + add
+
 second 2 → two FMA pipelines/core
 
 Gist:
+
 The peak FP32 throughput was estimated using the number of cores, clock frequency, SIMD vector width, and FMA capability. AVX2 processes 8 FP32 values per vector instruction, and FMA performs a multiplication and addition simultaneously, corresponding to 2 FLOPs per element. The Ryzen 7 7445HS provides two FMA units per core, giving an estimated theoretical peak of approximately 902 GFLOP/s.
 
 ---
@@ -65,41 +75,47 @@ The peak FP32 throughput was estimated using the number of cores, clock frequenc
 
 > Measure each loop ordering for matrix sizes 64, 128, 256, 512, 1024, 2048, 4096.
 
-| Loop order | N=256 (GFLOP/s) | N=1024 (GFLOP/s) | N=4096 GFLOP/s) |
-|---|---|---|---|
-| i-j-k (naive) | 1.30 | 0.18 | |
-| i-k-j | 15.85 | 14.40 | |
-| j-k-i | 0.12 | 0.05 | |
-| k-i-j | 13.54 | 13.69 | |
-| Tiled | 10.14 | 8.62 | |
-| Parallel | 10.28 | 8.39 | |
+| Sizes | i-j-k (naive) | i-k-j | j-k-i | k-i-j | Tiled | Parallel |
+|---|---|---|---|---|---|---|
+| N=64 | 7.18 |  9.04 |  2.11 |  14.98  | 9.12  | 9.12 |
+| N=128 | 1.50 |  13.98 |   0.72  | 14.22 |  8.65 |   9.08 |
+| N=256 | 1.37 | 17.49 | 0.39 |  16.93 |  8.66  | 8.26 |
+| N=512 | 0.39 | 15.81 | 0.13 |  15.78 |  7.67 |  7.67 |
+| N=1024 | 0.17 | 15.54 |  0.05 | 15.97 | 7.86 | 7.81 |
+| N=2048 | 
 
 **Best ordering found:**  i-k-j
 
 **Why does this ordering perform best?**
 
 _(Explain in terms of spatial locality and cache reuse of A, B, and C)_
+
 The i-k-j ordering performed best because it accesses matrix B and matrix C sequentially in memory, improving spatial locality and cache efficiency. In row-major storage, iterating over j in the innermost loop allows contiguous memory access for B[k][j] and C[i][j], which reduces cache misses and improves hardware prefetching. Additionally, the value A[i][k] can be reused across the entire inner loop, increasing temporal locality.
 
 ## Task 3 – Vectorization
 
 > List the compiler flags you tested and their effect.
 
-| Flags added | N=1024 (GFLOP/s) | Speedup vs. naive |
+| Flags added | N=1024 (GFLOP/s) (Parallel) | Speedup vs. naive |
 |---|---|---|
-| -O3 only (baseline) | 8.04 | 47.3x |
+| -O3 only (baseline) | 8.64 | 48x |
 | -O3 -march=native | 7.49 | 7.49x |
 | -O3 -march=native -ffast-math | 6.69  | ~39.35x |
 | -O3 -march=native -ffast-math -funroll-loops | 6.59 | ~38.76x |
 | -O3 -march=native -ffast-math -fopenmp-simd | 6.50 | ~38.2x |
 
 **Did you add any `#pragma` hints to the source?** If yes, which ones?
-Yes 
+
+Yes
+
 #pragma GCC ivdep
+
 for(int j=0;j<N;j++)
+
     c_row[j]+=a*b_row[j];
 
 **What speedup did you achieve? Why?**
+
 The compiler optimization flags significantly improved performance by enabling
 automatic vectorization and CPU-specific optimizations.
 
