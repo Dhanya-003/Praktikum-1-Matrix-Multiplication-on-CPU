@@ -1,9 +1,8 @@
 # ─── Makefile for Lab 1: Matrix Multiplication on CPU ───────────────────────
 CC = gcc
-CFLAGS = -O3
-LDFLAGS = -lm #-lpthread
+CFLAGS = -O3 -march=native -ffast-math
+LDFLAGS = -lm
 
-# Targets
 all: matmul
 
 matmul: matmul.c
@@ -11,9 +10,3 @@ matmul: matmul.c
 
 clean:
 	rm -f matmul *.o
-
-benchmark: matmul
-	@echo "Running comprehensive benchmark..."
-	./matmul
-
-.PHONY: all clean run_matmul run_ml benchmark
