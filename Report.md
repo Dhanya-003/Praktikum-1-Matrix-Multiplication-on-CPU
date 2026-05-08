@@ -19,7 +19,7 @@
 | CPU model | AMD Ryzen 7 7445HS w/ Radeon 740M Graphics |
 | Number of cores / threads | 6 cores / 12 threads |
 | Base / Boost clock speed (GHz) | ~4.0 GHz base / up to ~4.7 GHz boost |
-| SIMD ISA | SSE, SSE2, SSE4.1, SSE4.2, AVX, AVX2, AVX-512, FMA |
+| SIMD ISA | AVX, AVX2, AVX-512 |
 | SIMD width (bits / floats per vector) | 256 bits (8 FP32 floats/vector)|
 | MAC units per core | 2 FMA units/core |
 | L1 cache size (per core) | 32 KB L1d + 32 KB L1i |
