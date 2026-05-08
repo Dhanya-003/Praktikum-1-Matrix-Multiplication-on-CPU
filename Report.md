@@ -88,23 +88,13 @@ The peak FP32 throughput was estimated using the number of cores, clock frequenc
 | N=1024 | 0.17 | 15.54 |  0.05 | 15.97 | 7.86 | 7.81 |
 | N=2048 | 
 
-**Best ordering found:**  j-k-i
+**Best ordering found:**  i-k-j (or k-i-j — both are fast)
 
 **Why does this ordering perform best?**
 
 _(Explain in terms of spatial locality and cache reuse of A, B, and C)_
 
-Matrix multiplication:
-
-C[i][j]+=A[i][k]⋅B[k][j]
-
-j-k-i gives:
-
- good reuse of B[k][j]
- 
- better cache line utilization
- 
- fewer cache misses
+In row-major storage, the innermost loop should increment the last index (j) to access memory sequentially. In i-k-j ordering, the innermost j-loop accesses B[k][j] and C[i][j] with contiguous memory addresses, giving excellent spatial locality and allowing the CPU hardware prefetcher to load the next values before they are needed. Additionally, A[i][k] is fixed for the entire duration of the inner loop — it only depends on i and k, which are held constant — so it is loaded once and reused N times, giving perfect temporal locality. In contrast, orderings like i-j-k require B[k][j] to be accessed by jumping down a column (stride N), causing a cache miss on almost every access and explaining the dramatic 300× slowdown at large matrix sizes where the matrix no longer fits in cache.
 
 ## Task 3 – Vectorization
 
