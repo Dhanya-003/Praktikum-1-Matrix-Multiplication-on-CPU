@@ -109,14 +109,8 @@ In row-major storage, the innermost loop should increment the last index (j) to 
 | -O3 -march=native -ffast-math -fopenmp-simd | 6.50 | ~38.2x |
 
 **Did you add any `#pragma` hints to the source?** If yes, which ones?
-
-Yes
-
-#pragma GCC ivdep
-
-for(int j=0;j<N;j++)
-
-    c_row[j]+=a*b_row[j];
+yes
+The implementation uses the OpenMP directive #pragma omp parallel for schedule(static) to parallelize the outer loop of the matrix multiplication. This distributes rows of the output matrix across multiple threads.
 
 **What speedup did you achieve? Why?**
 
