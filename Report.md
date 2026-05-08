@@ -205,11 +205,12 @@ Matrix multiplication has high arithmetic intensity, meaning it is theoretically
 **What is the gap and why does it exist?**
 
 The performance gap between the optimized C implementation and PyTorch arises from highly optimized BLAS libraries used by PyTorch, which implement architecture-specific microkernels, vectorized SIMD instructions, and advanced cache blocking strategies. While the custom C implementation achieves strong performance through tiling and multithreading, it lacks low-level hardware-specific optimizations, resulting in lower overall throughput.
+
 ---
 
 ## Task 7 – Key Takeaways
 
-_Write 3–5 sentences summarising the most important lessons learned from this lab.
+Write 3–5 sentences summarising the most important lessons learned from this lab.
 
 This lab shows that matrix multiplication performance is influenced more by memory access patterns and CPU architecture than by the mathematical algorithm itself. Reordering loops and using tiling significantly improves cache reuse and reduces memory latency. Multithreading provides strong performance gains, but scalability is limited by memory bandwidth and overhead rather than pure computation. Compiler optimizations and vectorization further improve performance by enabling SIMD execution on modern CPUs. Overall, efficient use of the memory hierarchy is the key factor in high-performance computing.
 
