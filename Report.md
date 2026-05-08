@@ -212,7 +212,8 @@ The performance gap between the optimized C implementation and PyTorch arises fr
 
 Write 3–5 sentences summarising the most important lessons learned from this lab.
 
-This lab shows that matrix multiplication performance is influenced more by memory access patterns and CPU architecture than by the mathematical algorithm itself. Reordering loops and using tiling significantly improves cache reuse and reduces memory latency. Multithreading provides strong performance gains, but scalability is limited by memory bandwidth and overhead rather than pure computation. Compiler optimizations and vectorization further improve performance by enabling SIMD execution on modern CPUs. Overall, efficient use of the memory hierarchy is the key factor in high-performance computing.
+This lab demonstrates that matrix multiplication performance is strongly influenced by memory hierarchy, cache behavior, and data access patterns rather than just the number of floating-point operations. Loop reordering and tiling significantly improve performance by increasing cache reuse and reducing memory latency. Multithreading provides substantial speedup, but scalability is limited by memory bandwidth and overhead rather than purely by available CPU cores. Compiler optimizations and vectorization help, but their impact is secondary once the code is already memory-optimized. Overall, achieving high performance requires combining algorithmic structure with hardware-aware optimizations.
+
 
 ---
 
