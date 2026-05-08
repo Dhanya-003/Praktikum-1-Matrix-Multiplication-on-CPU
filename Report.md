@@ -179,7 +179,7 @@ Throughput does not scale linearly with the number of threads. Performance incre
 | Implementation   | GFLOP/s | % of PyTorch |
 | ---------------- | ------- | ------------ |
 | Naive C (approx) | ~0.5–3  | ~1–3%        |
-| Best optimized C | 65.10   | ~73%         |
+| Best optimized C | 65.10   | ~40%         |
 | PyTorch CPU      | 162.53  | 100%         |
 
 **Is your implementation compute-bound or memory-bound?** Justify with arithmetic intensity (FLOPs / bytes).
