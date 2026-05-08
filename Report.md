@@ -99,9 +99,9 @@ The i-k-j ordering performed best because it accesses matrix B and matrix C sequ
 | Flags added | N=1024 (GFLOP/s) (Parallel) | Speedup vs. naive |
 |---|---|---|
 | -O3 only (baseline) | 8.64 | 48x |
-| -O3 -march=native | 7.49 | 7.49x |
-| -O3 -march=native -ffast-math | 6.69  | ~39.35x |
-| -O3 -march=native -ffast-math -funroll-loops | 6.59 | ~38.76x |
+| -O3 -march=native | 6.98 | 36.73x |
+| -O3 -march=native -ffast-math | 6.42  | ~35.66x |
+| -O3 -march=native -ffast-math -funroll-loops | 6.97 | ~38.72x |
 | -O3 -march=native -ffast-math -fopenmp-simd | 6.50 | ~38.2x |
 
 **Did you add any `#pragma` hints to the source?** If yes, which ones?
@@ -116,37 +116,20 @@ for(int j=0;j<N;j++)
 
 **What speedup did you achieve? Why?**
 
-The compiler optimization flags significantly improved performance by enabling
-automatic vectorization and CPU-specific optimizations.
+Increasing compiler optimization beyond -O3 does not improve performance for matrix multiplication. In fact, flags such as -march=native, -ffast-math, -funroll-loops, and -fopenmp-simd slightly reduce performance, indicating that the compiler already generates efficient vectorized code at -O3. The observed behavior suggests that the kernel is not compute-bound anymore, but limited by memory hierarchy effects and instruction scheduling overhead.
 
-The -march=native flag allows the compiler to use SIMD instructions supported
-by the processor (such as AVX2). This allows multiple floating-point operations
-to be executed simultaneously.
-
-The -ffast-math flag relaxes strict IEEE floating point rules, enabling the
-compiler to reorder operations and generate more efficient vectorized code.
-
-Loop unrolling (-funroll-loops) reduces loop control overhead and increases
-instruction-level parallelism.
-
-Finally, the use of SIMD pragmas or -fopenmp-simd allows the compiler to safely
-vectorize inner loops, further improving throughput.
-
-Overall, these optimizations increased performance from about 0.84 GFLOP/s to
-approximately 11 GFLOP/s on N=1024, achieving around a 13× speedup compared to
-the naive baseline implementation.
 ---
 
 ## Task 4 – Loop Tiling
 
 > Experiment with tile sizes to find the sweet spot for your cache hierarchy.
 
-| Tile size | N=1024 (GFLOP/s) | N=4096 (GFLOP/s) |
-|---|---|---|
-| 32 | ~6.9 | ~5.7 |
-| 64 | ~7.4 | ~6.3 |
-| 128 | ~6.8 | ~5.9 |
-| 256 | ~5.1 | ~4.4 |
+| Tile size | N=1024 (GFLOP/s) |
+|---|---|
+| 32 | ~4 |
+| 64 | ~6.6 | 
+| 128 | ~6.8 |
+| 256 | ~5.1 |
 
 **Best tile size:** ___ 64
 
