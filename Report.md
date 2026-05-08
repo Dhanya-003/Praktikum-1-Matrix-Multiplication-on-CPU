@@ -161,16 +161,20 @@ The 128×128 tile size fits more effectively within the machine’s cache hierar
 
 > Measure scaling as you increase the number of OpenMP threads.
 
-| Threads | N=1024 (GFLOP/s) | Speedup |
+Thread Scaling (N = 1024)
+| Threads |  GFLOP/s  | Speedup |
 |---|---|---|
-| 1 |  11.44  |   1.00x |
-| 2 | 22.97   |   2.01x |
-| 4 | 45.45   |   3.97x |
-| 6 | 73.02   |   6.38x |
+1   |      9.90    |  1.00x
+2   |      21.68    |  2.19x
+4    |     44.99     | 4.54x
+6     |    52.18     | 5.27x
+8      |   52.67      |5.32x
+10      |   50.30      |5.08x
+12       |  52.25      |5.28x
 
 **Does throughput scale linearly with threads?** Why / why not?
 
-Throughput scales approximately linearly with the number of threads because matrix multiplication can be divided into independent computations across multiple CPU cores. However, scaling is not perfectly linear due to memory bandwidth limits, cache contention, and thread management overhead.
+Throughput does not scale linearly with the number of threads. Performance increases almost proportionally from 1 to 4 threads and continues to improve up to 6 threads, but after that it saturates. Beyond 6 threads, adding more threads (8, 10, 12) does not significantly improve performance because the system reaches hardware limits. This happens due to memory bandwidth constraints, cache contention, and thread scheduling overhead. Therefore, the workload becomes memory-bound rather than compute-bound at higher thread counts.
 
 ---
 
