@@ -1,7 +1,11 @@
 # Lab Report – Matrix Multiplication on CPU
+
 **Course:** AI Accelerators (AIA)
+
 **Lab:** Praktikum 1
+
 **Team members:** Dhanyashri Mohanarangan, Dakshil Rajeshbhai Vora
+
 **Date:** 08/05/2026
 
 ---
