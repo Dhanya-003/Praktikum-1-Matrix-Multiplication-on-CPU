@@ -127,28 +127,29 @@ Increasing compiler optimization beyond -O3 does not improve performance for mat
 | Tile size | N=1024 (GFLOP/s) |
 |---|---|
 | 32 | ~4 |
-| 64 | ~6.6 | 
-| 128 | ~6.8 |
-| 256 | ~5.1 |
+| 64 | 6.6 | 
+| 128 | 9.29 |
+| 256 | 8.63 |
 
-**Best tile size:** ___ 64
+**Best tile size:** ___ 128
 
 **Why does this tile size work best for your machine?**
-The best tile size on this machine was 64.
 
-Loop tiling improves performance by dividing the matrix multiplication
-into smaller blocks that fit better into the CPU cache. When the tile
-size matches the capacity of the cache, elements of matrices A, B,
-and C can remain in the cache during computation.
+A tile size of 128 provides the best balance between cache reuse and loop overhead on the tested machine. With loop tiling, matrix sub-blocks are reused multiple times while remaining in the CPU cache, reducing expensive memory accesses to RAM.
 
-With a tile size of 64, the working set of data fits well in the L1/L2
-cache of the processor. This reduces cache misses and improves spatial
-and temporal locality.
+For smaller tile sizes such as 32 and 64:
 
-Smaller tiles such as 32 do not fully utilize the cache capacity,
-while larger tiles such as 128 or 256 exceed the cache size and cause
-more cache evictions. Therefore, a tile size of 64 achieves the best
-balance between computation and memory access on this machine.
+cache usage is efficient,
+but the program performs more loop iterations and block management,
+increasing loop-control overhead.
+
+For larger tile sizes such as 256:
+
+the working data block becomes too large for efficient cache usage,
+causing more cache misses and memory traffic,
+which reduces performance.
+
+The 128×128 tile size fits more effectively within the machine’s cache hierarchy (mainly L2 cache), allowing better temporal locality and improved reuse of matrix data. This minimizes memory stalls and results in the highest observed performance of about 9.29 GFLOP/s.
 
 ---
 
@@ -156,55 +157,57 @@ balance between computation and memory access on this machine.
 
 > Measure scaling as you increase the number of OpenMP threads.
 
-| Threads | N=4096 (GFLOP/s) | Speedup |
+| Threads | N=1024 (GFLOP/s) | Speedup |
 |---|---|---|
-| 1 |7.5 | 1.0× |
-| 2 | 13.9 | 1.85x |
-| 4 | 24.8 | 3.30x |
-| 8 | 26.1 | 3.48x |
-| _(max physical cores)_ | 24.8 | 3.30x |
+| 1 |  11.44  |   1.00x |
+| 2 | 22.97   |   2.01x |
+| 4 | 45.45   |   3.97x |
+| 6 | 73.02   |   6.38x |
 
 **Does throughput scale linearly with threads?** Why / why not?
-Throughput does not scale perfectly linearly with the number of threads.
 
-While increasing the number of threads improves performance, the speedup
-gradually decreases as more threads are added. This happens because threads
-compete for shared resources such as memory bandwidth and cache.
+Throughput scales approximately linearly with the number of threads because matrix multiplication can be divided into independent computations across multiple CPU cores. However, scaling is not perfectly linear due to memory bandwidth limits, cache contention, and thread management overhead.
 
-Additionally, the processor has 4 physical cores but 8 logical threads
-(hyper-threading). Hyper-threading allows two threads to share the same
-core resources, so the performance improvement beyond 4 threads is limited.
-
-Therefore, the best performance is usually achieved near the number of
-physical cores rather than the number of logical threads.
 ---
 
 ## Task 6 – Performance Analysis
 
+**Comparison vs. PyTorch (N=1024):**
+
+| Implementation   | GFLOP/s | % of PyTorch |
+| ---------------- | ------- | ------------ |
+| Naive C (approx) | ~0.5–3  | ~1–3%        |
+| Best optimized C | 65.10   | ~73%         |
+| PyTorch CPU      | 89.29   | 100%         |
+
 **Is your implementation compute-bound or memory-bound?** Justify with arithmetic intensity (FLOPs / bytes).
 
-**Comparison vs. PyTorch (N=4096):**
+## Arithmetic Intensity
 
-| Implementation | GFLOP/s | % of PyTorch |
-|---|---|---|
-| Naive C | 0.56 | 0.5% |
-| Best optimised C | 20.35 | 19% |
-| PyTorch (CPU) | 105 | 100% |
+Arithmetic Intensity (AI) = FLOPs / Bytes moved
+
+For matrix multiplication (N × N):
+
+FLOPs = 2N³  
+Bytes = 3N² × 4 = 12N²  
+
+AI = (2N³) / (12N²) = N / 6  
+
+For N = 1024:  
+AI ≈ 170.67  
+
+Matrix multiplication has high arithmetic intensity, meaning it is theoretically compute-bound. However, the naive implementation is memory-bound due to poor cache reuse. Loop reordering, tiling, and multithreading significantly improve cache utilization, increasing arithmetic intensity and shifting performance closer to a compute-bound regime. Despite these optimizations, the implementation still does not reach PyTorch performance due to more advanced low-level optimizations in vendor-tuned libraries.
 
 **What is the gap and why does it exist?**
-The implementation is mostly memory-bound for the naive version because
-matrix multiplication repeatedly loads data from memory with poor cache
-reuse. Optimized versions such as loop-reordered and tiled implementations
-increase arithmetic intensity by improving cache locality.
 
-However, even with these optimizations the algorithm is still partially
-memory-bound because large matrices exceed cache capacity and require
-frequent memory accesses.
+The performance gap between the optimized C implementation and PyTorch arises from highly optimized BLAS libraries used by PyTorch, which implement architecture-specific microkernels, vectorized SIMD instructions, and advanced cache blocking strategies. While the custom C implementation achieves strong performance through tiling and multithreading, it lacks low-level hardware-specific optimizations, resulting in lower overall throughput.
 ---
 
 ## Task 7 – Key Takeaways
 
-_Write 3–5 sentences summarising the most important lessons learned from this lab._his lab demonstrated how hardware-aware optimizations significantly improve matrix multiplication performance. Loop reordering improves cache locality, vectorization enables SIMD execution, and loop tiling improves cache reuse. Multithreading allows multiple CPU cores to compute simultaneously. Despite these optimizations, highly optimized libraries like PyTorch achieve higher performance due to assembly-level optimizations and advanced scheduling.
+_Write 3–5 sentences summarising the most important lessons learned from this lab.
+
+This lab shows that matrix multiplication performance is influenced more by memory access patterns and CPU architecture than by the mathematical algorithm itself. Reordering loops and using tiling significantly improves cache reuse and reduces memory latency. Multithreading provides strong performance gains, but scalability is limited by memory bandwidth and overhead rather than pure computation. Compiler optimizations and vectorization further improve performance by enabling SIMD execution on modern CPUs. Overall, efficient use of the memory hierarchy is the key factor in high-performance computing.
 
 ---
 
